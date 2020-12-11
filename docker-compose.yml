@@ -1,0 +1,63 @@
+version: "3.2"
+
+networks:
+  my-services-net:
+    driver: bridge
+
+services:
+  uca-mysql:
+    hostname: uca-redis
+    image: mysql:5.7.26
+    # network_mode: "host" # 如果需要容器使用宿主机IP(内网IP)，则可以配置此项
+    container_name: uca-mysql # 指定容器名称，如果不设置此参数，则由系统自动生成
+    restart: always # 设置容器自启模式
+    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci # 设置utf8字符集
+    environment:
+      - TZ=Asia/Shanghai # 设置容器时区与宿主机保持一致
+      - MYSQL_ROOT_PASSWORD=unic-moove # 设置root密码
+    volumes:
+      - /etc/localtime:/etc/localtime:ro # 设置容器时区与宿主机保持一致
+      - ./data/mysql:/var/lib/mysql  # 映射数据库保存目录到宿主机，防止数据丢失
+      - ./conf/mysql/my.cnf:/etc/mysql/my.cnf # 映射数据库配置文件
+    ports:
+      - "3306:3306"
+    networks:
+      - my-services-net
+
+
+  uca-redis:
+    hostname: uca-redis
+    image: redis:5.0.6
+    container_name: uca-redis
+    restart: always
+    command: redis-server /etc/redis.conf --requirepass "unic-moove"
+    environment:
+      - TZ=Asia/Shanghai
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./data/redis:/data
+      - ./conf/redis/redis.conf:/etc/redis.conf
+    ports:
+      - "6379:6379"
+    networks:
+      - my-services-net
+
+
+  uca-rabbitmq:
+    hostname: uca-rabbitmq
+    image: rabbitmq:3.6.15-management
+    container_name: uca-rabbitmq
+    restart: always
+    environment:
+      - RABBITMQ_DEFAULT_USER=moove
+      - RABBITMQ_DEFAULT_PASS=unic-moove
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10" 
+    networks:
+      - my-services-net
