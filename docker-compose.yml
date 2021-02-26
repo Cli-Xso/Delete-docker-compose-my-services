@@ -6,7 +6,7 @@ networks:
 
 services:
   uca-mysql:
-    hostname: uca-redis
+    hostname: uca-mysql
     image: mysql:5.7.26
     # network_mode: "host" # 如果需要容器使用宿主机IP(内网IP)，则可以配置此项
     container_name: uca-mysql # 指定容器名称，如果不设置此参数，则由系统自动生成
